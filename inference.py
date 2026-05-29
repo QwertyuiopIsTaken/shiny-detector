@@ -30,24 +30,9 @@ mel_transform = torchaudio.transforms.MelSpectrogram(
     n_mels=64
 )
 
-
 # =====================
 # AUDIO PREPROCESSING
 # =====================
-def load_audio(path):
-    waveform, sr = torchaudio.load(path)
-
-    # mono
-    if waveform.shape[0] > 1:
-        waveform = waveform.mean(dim=0, keepdim=True)
-
-    # resample
-    if sr != SAMPLE_RATE:
-        waveform = torchaudio.transforms.Resample(sr, SAMPLE_RATE)(waveform)
-
-    return waveform
-
-
 def fix_length(waveform, seconds=5):
     target_len = int(seconds * SAMPLE_RATE)
 
@@ -69,34 +54,43 @@ def to_mel(waveform):
 # =====================
 # PREDICTION
 # =====================
-def predict(file_path):
-    waveform = load_audio(file_path)
+def predict_chunk(chunk_np):
+    # convert numpy → torch
+    waveform = torch.from_numpy(chunk_np.T).float()  # (channels, samples)
 
-    # normalize (same as training!)
+    # mono
+    if waveform.shape[0] > 1:
+        waveform = waveform.mean(dim=0, keepdim=True)
+
+    # normalize
     waveform = waveform / (waveform.abs().max() + 1e-9)
 
+    # fix length
     waveform = fix_length(waveform)
+
+    # mel
     mel = to_mel(waveform)
 
-    # add batch dimension
     mel = mel.unsqueeze(0).to(DEVICE)
 
     with torch.no_grad():
         output = model(mel)
         prob = output.item()
 
-    label = "DRUM" if prob > 0.5 else "NO DRUM"
+    print("CNN prob:", prob)
 
-    return label, prob
+    return prob > 0.5
 
 
 # =====================
 # RUN
 # =====================
+'''
 if __name__ == "__main__":
-    file_path = "Smoldering Heat - Loomian Legacy OST [TtBO0vIJeK0].mp3"  # change this
+    file_path = "placeholder.mp3"  # change this
 
     label, prob = predict(file_path)
 
     print(f"\nPrediction: {label}")
     print(f"Confidence: {prob:.4f}")
+'''

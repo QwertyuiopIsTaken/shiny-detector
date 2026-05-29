@@ -41,7 +41,7 @@ class DetectorController:
             audio_chunk = self.state.rec.record(numframes=chunk_len)
             audio_chunk = np.nan_to_num(audio_chunk)
 
-            if self.detector.detect(audio_chunk):
+            if self.predict_chunk(audio_chunk):
                 messagebox.showinfo(
                     "Tone Detector",
                     "Sound detected!"
