@@ -23,7 +23,6 @@ class CNNNetwork(nn.Module):
             nn.ReLU(),
         )
 
-        # 🔥 KEY FIX: makes output size independent of input shape
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
 
         self.classifier = nn.Sequential(
